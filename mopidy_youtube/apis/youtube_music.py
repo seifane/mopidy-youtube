@@ -24,16 +24,11 @@ own_channel_id = None
 class Music(Client):
     endpoint = None
 
-    def __init__(self, proxy, headers, *args, **kwargs):
+    def __init__(self, proxy, headers, auth_file, *args, **kwargs):
         global ytmusic
         super().__init__(proxy, headers, *args, **kwargs)
-        auth = (
-            None
-            if headers.get("Cookie") == "PREF=hl=en; CONSENT=YES+20210329;"
-            else json.dumps(headers)
-        )
         try:
-            ytmusic = YTMusic(auth=auth, requests_session=self.session)
+            ytmusic = YTMusic(auth=auth_file, requests_session=self.session)
         except Exception as e:
             logger.error("YTMusic init error: %s", str(e))
             ytmusic = YTMusic()

@@ -138,6 +138,7 @@ class YouTubeBackend(
             youtube.musicapi_cookiefile = config["youtube"].get(
                 "musicapi_cookiefile", None
             )
+            youtube.musicapi_oauth_file = config["youtube"].get("musicapi_oauth_file", None)
 
             # # not required, because musicapi_cookie is no longer allowed
             # if youtube.musicapi_cookie and youtube.musicapi_cookiefile:
@@ -182,54 +183,13 @@ class YouTubeBackend(
         if youtube.musicapi_enabled is True:
             logger.info("Using YouTube Music API")
 
+            auth_file = None
             if youtube.musicapi_browser_authentication_file:
-                logger.info(
-                    f"Reading cookies from {youtube.musicapi_browser_authentication_file}"
-                )
-                with open(
-                    youtube.musicapi_browser_authentication_file
-                ) as browser_authentication_file:
-                    headers = json.load(browser_authentication_file)
+                auth_file = youtube.musicapi_browser_authentication_file
+            if youtube.musicapi_oauth_file:
+                auth_file = youtube.musicapi_oauth_file
 
-            # # previously used the Mozilla cookiejar file that youtube-dl requries
-            # # now use a json file generated according to the instructions on
-            # # https://ytmusicapi.readthedocs.io/en/stable/setup/browser.html
-            # # it would be _much_ better if this were the same for ytmusicapi and
-            # # youtube-dl
-
-            #     cj = MozillaCookieJar(
-            #         youtube.musicapi_cookiefile,
-            #         policy=DefaultCookiePolicy(allowed_domains="youtube.com"),
-            #     )
-            #     cj.load()
-            #     cookie_parts = []
-            #     for cookie in cj:
-            #         cookie_parts.append(
-            #             "%s=%s"
-            #             % (
-            #                 cookie.name,
-            #                 SimpleCookie()
-            #                 .value_encode(cookie.value)[1]
-            #                 .replace('"', ""),
-            #             )
-            #         )
-
-            #     youtube.musicapi_cookie = "; ".join(cookie_parts)
-            # if youtube.musicapi_cookie:
-            #     headers.update({"Cookie": youtube.musicapi_cookie})
-
-            # headers.update(
-            #     {
-            #         "Accept": "*/*",
-            #         "Content-Type": "application/json",
-            #         "origin": "https://music.youtube.com",
-            #         "x-origin": "https://music.youtube.com",  # seems to be needed?
-            #     }
-            # )
-
-            youtube.Entry.api = youtube_music.Music(proxy, headers)
-            # if youtube.api_enabled:
-            #     youtube.Entry.api.list_playlists = music.list_playlists
+            youtube.Entry.api = youtube_music.Music(proxy, headers, auth_file)
 
     def add_track_to_history(self, bId):
         # this should be done in .youtube, by reference to the relevant API.  But for now...
